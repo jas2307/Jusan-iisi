@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Жусан иісі | Киноповесть</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Roboto+Condensed:wght@300;400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --film-black: #1a1a1a;
+            --film-sepia: #e6dcc3;
+            --film-accent: #8c7b5d;
+        }
+
+        body {
+            font-family: 'Roboto Condensed', sans-serif;
+            background-color: var(--film-black);
+            color: var(--film-sepia);
+            overflow-x: hidden;
+            /* Subtle texture background */
+            background-image: radial-gradient(#2c2c2c 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .font-cinema {
+            font-family: 'Playfair Display', serif;
+        }
+
+        /* Old Film Grain Animation */
+        .film-grain {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 50;
+            opacity: 0.1;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        .active-tab {
+            border-bottom: 3px solid var(--film-sepia);
+            color: #fff;
+            text-shadow: 0 0 10px rgba(230, 220, 195, 0.5);
+        }
+
+        /* Card Flip Styles */
+        .flip-card {
+            perspective: 1000px;
+        }
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.8s;
+            transform-style: preserve-3d;
+        }
+        .flip-card:hover .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+        }
+        .flip-card-back {
+            background-color: #2a2a2a;
+            color: var(--film-sepia);
+            transform: rotateY(180deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            border: 1px solid var(--film-accent);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #111; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #555; 
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #888; 
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col relative">
+
+    <!-- Film Grain Overlay -->
+    <div class="film-grain"></div>
+
+    <!-- Opening Curtain / Loader -->
+    <div id="loader" class="fixed inset-0 z-[100] flex items-center justify-center bg-black transition-opacity duration-1000">
+        <div class="text-center p-8 border-4 border-double border-stone-600">
+            <h1 class="font-cinema text-5xl md:text-7xl text-amber-100 mb-4 tracking-widest uppercase">Жусан Иісі</h1>
+            <p class="text-stone-400 uppercase tracking-widest text-sm mb-8">Сайын Мұратбеков</p>
+            <button onclick="startExperience()" class="border-2 border-amber-100 text-amber-100 px-8 py-3 hover:bg-amber-100 hover:text-black transition-all duration-300 font-bold tracking-wider">
+                <i class="fas fa-play mr-2"></i> ФИЛЬМДІ БАСТАУ
+            </button>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="relative z-40 bg-stone-900 border-b-4 border-double border-stone-700 p-4 shadow-lg">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <i class="fas fa-film text-3xl text-amber-600"></i>
+                <div>
+                    <h1 class="font-cinema text-2xl text-amber-100 tracking-wider">КИНОПОВЕСТЬ</h1>
+                    <p class="text-xs text-stone-500 uppercase">Әдеби-интерактивті жоба</p>
+                </div>
+            </div>
+            <div class="flex space-x-2">
+                <button onclick="toggleMute()" class="text-stone-400 hover:text-amber-100 transition p-2" title="Дыбысты қосу/өшіру">
+                    <i id="soundIcon" class="fas fa-volume-up text-xl"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Navigation -->
+        <nav class="flex justify-center mt-4 space-x-4 md:space-x-8 text-sm md:text-lg uppercase tracking-widest font-bold overflow-x-auto">
+            <button onclick="switchTab('scene')" id="tab-scene" class="active-tab pb-2 px-4 transition-all hover:text-amber-200 whitespace-nowrap">
+                1. Сценарий
+            </button>
+            <button onclick="switchTab('gallery')" id="tab-gallery" class="pb-2 px-4 text-stone-500 transition-all hover:text-amber-200 whitespace-nowrap">
+                2. Кадрлар
+            </button>
+            <button onclick="switchTab('test')" id="tab-test" class="pb-2 px-4 text-stone-500 transition-all hover:text-amber-200 whitespace-nowrap">
+                3. Кастинг (Тест)
+            </button>
+        </nav>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow container mx-auto p-4 z-40 relative pb-20">
+        
+        <!-- SCENE 1: Information -->
+        <div id="content-scene" class="section-content animate-fade-in block">
+            <div class="grid md:grid-cols-2 gap-8 items-center mt-8">
+                <!-- Visual Element -->
+                <div class="bg-stone-800 p-2 border-2 border-stone-600 shadow-2xl transform rotate-1 hover:rotate-0 transition duration-500">
+                    <div class="relative h-64 md:h-96 w-full overflow-hidden bg-black flex items-center justify-center">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black to-transparent z-10"></div>
+                        <!-- UPDATED IMAGE -->
+                        <img src="https://i.ytimg.com/vi/meCIwSRYQE0/sddefault.jpg" alt="Жусан иісі" class="w-full h-full object-cover opacity-80">
+                        <div class="absolute bottom-6 left-6 z-20">
+                            <h2 class="font-cinema text-3xl text-white drop-shadow-md">1942 жыл</h2>
+                            <p class="text-stone-300 italic text-sm">Соғыс тылындағы ауыр тағдыр...</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Text Content -->
+                <div class="space-y-6 text-stone-300">
+                    <h2 class="font-cinema text-4xl text-amber-100 border-l-4 border-amber-600 pl-4">Сюжет желісі</h2>
+                    <p class="text-lg leading-relaxed font-light">
+                        <span class="text-5xl float-left mr-3 font-cinema text-amber-600 leading-[0.8]">Б</span>ұл – соғыс ауыртпалығын ерте сезінген балалар туралы мұңды хикая. Повесть кейіпкері – <b>Аян</b> есімді жетім бала. Оның әкесі соғысқа кеткен, шешесі қайтыс болған. Аян әжесімен бірге 1942 жылы ауылға көшіп келеді.
+                    </p>
+                    <p class="text-lg leading-relaxed font-light">
+                        Ол басқа балаларға ұқсамайды: аяғын сылтып басады, жарғақ сары тоны бар. Бірақ оның қиялы жүйрік. Қыстың ұзақ түндерінде ат қораның төбесінде балаларға қызықты ертегілер айтып, оларды сиқырлы әлемге жетелейді.
+                    </p>
+                    <div class="bg-stone-800 bg-opacity-50 p-4 border-l-2 border-stone-500 italic">
+                        "Ей, тоқтаңдаршы, мен сендерге бүгін кешегіден де қызық ертегі айтамын..."
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info Cards -->
+            <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-stone-800 p-6 border-t-4 border-amber-800 hover:bg-stone-700 transition">
+                    <i class="fas fa-feather-alt text-3xl text-amber-700 mb-3"></i>
+                    <h3 class="font-cinema text-xl text-white mb-2">Автор</h3>
+                    <p class="text-stone-400 text-sm">Сайын Мұратбеков (1936-2007).</p>
+                </div>
+                <div class="bg-stone-800 p-6 border-t-4 border-amber-800 hover:bg-stone-700 transition">
+                    <i class="fas fa-users text-3xl text-amber-700 mb-3"></i>
+                    <h3 class="font-cinema text-xl text-white mb-2">Кейіпкерлер</h3>
+                    <p class="text-stone-400 text-sm">Аян, Баяндаушы бала, Садық (атаман), Есікбай, Тұржан, Бапай, Асылбек, Қосым.</p>
+                </div>
+                <div class="bg-stone-800 p-6 border-t-4 border-amber-800 hover:bg-stone-700 transition">
+                    <i class="fas fa-mountain text-3xl text-amber-700 mb-3"></i>
+                    <h3 class="font-cinema text-xl text-white mb-2">Мекен</h3>
+                    <p class="text-stone-400 text-sm">Ешкіөлмес тауының етегіндегі ауыл.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SCENE 2: Gallery -->
+        <div id="content-gallery" class="section-content hidden animate-fade-in">
+            <h2 class="font-cinema text-3xl text-center text-amber-100 mb-8 mt-4">Кейіпкерлер галереясы</h2>
+            <p class="text-center text-stone-500 mb-8">(Карточканы басып, ақпаратты оқыңыз)</p>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 px-4">
+                <!-- Card 1 -->
+                <div class="flip-card h-80 w-full cursor-pointer" onclick="playClickSound()">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front bg-stone-800 flex flex-col items-center justify-center border-2 border-stone-700">
+                            <i class="fas fa-child text-6xl text-stone-500 mb-4"></i>
+                            <h3 class="font-cinema text-3xl text-amber-100">АЯН</h3>
+                            <p class="text-stone-400 text-sm mt-2">Басты кейіпкер</p>
+                        </div>
+                        <div class="flip-card-back flex-col">
+                            <h3 class="font-cinema text-2xl text-amber-400 mb-2">Ертегіші бала</h3>
+                            <p class="text-sm px-4">Жарғақ сары тоны бар, сол аяғын сылтып басатын жетім бала. Қиялшыл, мейірімді. Ағасын сағынады және оның пальтосынан жусан иісін іздейді.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2: UPDATED from SADYK to NARRATOR BOY -->
+                <div class="flip-card h-80 w-full cursor-pointer" onclick="playClickSound()">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front bg-stone-800 flex flex-col items-center justify-center border-2 border-stone-700">
+                            <i class="fas fa-pen-nib text-6xl text-stone-500 mb-4"></i>
+                            <h3 class="font-cinema text-3xl text-amber-100">БАЯНДАУШЫ БАЛА</h3>
+                            <p class="text-stone-400 text-sm mt-2">Мен</p>
+                        </div>
+                        <div class="flip-card-back flex-col">
+                            <h3 class="font-cinema text-2xl text-amber-400 mb-2">Автор бейнесі</h3>
+                            <p class="text-sm px-4">Оқиға осы баланың атынан баяндалады. Аты аталмайды («Мен» деп беріледі). Аянның ең жақын досы әрі сырласы.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="flip-card h-80 w-full cursor-pointer" onclick="playClickSound()">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front bg-stone-800 flex flex-col items-center justify-center border-2 border-stone-700">
+                             <i class="fas fa-leaf text-6xl text-stone-500 mb-4"></i>
+                            <h3 class="font-cinema text-3xl text-amber-100">ЖУСАН</h3>
+                            <p class="text-stone-400 text-sm mt-2">Символ</p>
+                        </div>
+                        <div class="flip-card-back flex-col">
+                            <h3 class="font-cinema text-2xl text-amber-400 mb-2">Сағыныш</h3>
+                            <p class="text-sm px-4">Туған жердің, әкенің, ағаның иісі. Аян ағасының пальтосынан осы иісті иіскеп жұбанады.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SCENE 3: Test (35 Questions) -->
+        <div id="content-test" class="section-content hidden animate-fade-in w-full max-w-4xl mx-auto mt-4">
+            
+            <div class="bg-stone-900 border-4 border-stone-800 p-4 md:p-8 shadow-2xl relative rounded-sm">
+                <!-- Film Strip Decoration Top -->
+                <div class="absolute -top-6 left-0 w-full h-8 bg-black flex justify-between items-center px-2 overflow-hidden opacity-80">
+                    <div class="flex space-x-8 w-full justify-between">
+                         <!-- Repeated dots simulating film holes -->
+                         <div class="w-4 h-3 bg-white rounded-sm"></div><div class="w-4 h-3 bg-white rounded-sm"></div>
+                         <div class="w-4 h-3 bg-white rounded-sm"></div><div class="w-4 h-3 bg-white rounded-sm"></div>
+                         <div class="w-4 h-3 bg-white rounded-sm"></div><div class="w-4 h-3 bg-white rounded-sm"></div>
+                         <div class="w-4 h-3 bg-white rounded-sm"></div><div class="w-4 h-3 bg-white rounded-sm"></div>
+                    </div>
+                </div>
+
+                <!-- Interface -->
+                <div id="quiz-ui">
+                    <div class="flex justify-between items-end mb-6 border-b border-stone-700 pb-2">
+                        <span class="text-stone-500 font-bold tracking-widest text-sm md:text-base">КАДР <span id="current-question-num" class="text-amber-500 text-xl">1</span> / 35</span>
+                        <div class="text-right">
+                            <span class="text-xs text-stone-500 uppercase">Ұпай:</span>
+                            <span id="score-display" class="text-amber-100 font-bold text-lg">0</span>
+                        </div>
+                    </div>
+
+                    <div id="question-area" class="min-h-[300px] flex flex-col justify-center">
+                        <!-- Content injected via JS -->
+                    </div>
+
+                    <div class="mt-8 flex justify-between items-center">
+                        <button onclick="prevQuestion()" id="prev-btn" class="text-stone-500 hover:text-white disabled:opacity-0 transition">
+                            <i class="fas fa-backward mr-2"></i> Артқа
+                        </button>
+                        
+                        <div class="flex space-x-2">
+                            <button onclick="nextQuestion()" id="next-btn" class="bg-amber-800 hover:bg-amber-700 text-white px-6 py-2 font-bold tracking-wider transition-colors rounded shadow-lg">
+                                Келесі <i class="fas fa-forward ml-2"></i>
+                            </button>
+                            <button onclick="finishTest()" id="finish-btn" class="hidden bg-green-800 hover:bg-green-700 text-white px-6 py-2 font-bold tracking-wider transition-colors rounded shadow-lg">
+                                Аяқтау <i class="fas fa-check ml-2"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Results Screen -->
+                <div id="results-ui" class="hidden text-center py-10">
+                    <i class="fas fa-award text-6xl text-amber-500 mb-6 animate-pulse"></i>
+                    <h2 class="font-cinema text-4xl text-white mb-2">Түсірілім аяқталды!</h2>
+                    <p class="text-stone-400 mb-6">Сіздің нәтижеңіз:</p>
+                    
+                    <div class="text-7xl font-bold text-amber-100 mb-6">
+                        <span id="final-score">0</span><span class="text-3xl text-stone-500">/35</span>
+                    </div>
+                    
+                    <p id="feedback-text" class="text-xl text-amber-200 italic mb-10 border-t border-b border-stone-700 py-4"></p>
+                    
+                    <button onclick="restartTest()" class="border border-stone-500 text-stone-300 px-8 py-3 hover:bg-stone-800 transition uppercase tracking-widest text-sm">
+                        Қайта бастау
+                    </button>
+                </div>
+
+                 <!-- Film Strip Decoration Bottom -->
+                 <div class="absolute -bottom-6 left-0 w-full h-8 bg-black flex justify-between items-center px-2 overflow-hidden opacity-80">
+                    <div class="flex space-x-8 w-full justify-between">
+                         <div class="w-4 h-3 bg-white rounded-sm"></div><div class="w-4 h-3 bg-white rounded-sm"></div>
+                         <div class="w-4 h-3 bg-white rounded-sm"></div><div class="w-4 h-3 bg-white rounded-sm"></div>
+                         <div class="w-4 h-3 bg-white rounded-sm"></div><div class="w-4 h-3 bg-white rounded-sm"></div>
+                         <div class="w-4 h-3 bg-white rounded-sm"></div><div class="w-4 h-3 bg-white rounded-sm"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="bg-black text-stone-600 p-6 text-center text-xs uppercase tracking-widest z-40 border-t border-stone-800">
+        &copy; 2024 Кино-Әдебиет Студиясы | Сайын Мұратбеков «Жусан иісі»
+    </footer>
+
+    <script>
+        // --- Audio System ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let isMuted = false;
+
+        function playTone(freq, type, duration) {
+            if (isMuted) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        }
+
+        function playClickSound() { playTone(600, 'sine', 0.1); }
+        function playSlideSound() { playTone(200, 'triangle', 0.2); }
+        
+        function toggleMute() {
+            isMuted = !isMuted;
+            const icon = document.getElementById('soundIcon');
+            icon.className = isMuted ? 'fas fa-volume-mute text-xl' : 'fas fa-volume-up text-xl';
+        }
+
+        function startExperience() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const loader = document.getElementById('loader');
+            loader.style.opacity = '0';
+            playTone(400, 'sine', 0.5); // Start sound
+            setTimeout(() => { loader.style.display = 'none'; }, 1000);
+        }
+
+        function switchTab(tabId) {
+            playSlideSound();
+            ['scene', 'gallery', 'test'].forEach(t => {
+                document.getElementById('content-' + t).classList.add('hidden');
+                document.getElementById('content-' + t).classList.remove('block');
+                document.getElementById('tab-' + t).classList.remove('active-tab', 'text-amber-100');
+                document.getElementById('tab-' + t).classList.add('text-stone-500');
+            });
+            document.getElementById('content-' + tabId).classList.remove('hidden');
+            document.getElementById('content-' + tabId).classList.add('block');
+            const btn = document.getElementById('tab-' + tabId);
+            btn.classList.add('active-tab', 'text-amber-100');
+            btn.classList.remove('text-stone-500');
+        }
+
+        // --- Quiz Data (35 Questions) ---
+        // Types: 'single', 'multi', 'match', 'order', 'text', 'boolean'
+        const questions = [
+            // 1. Оқиға уақыты
+            { type: 'single', q: 'Оқиға қай жылы басталады?', options: ['1941 жылдың күзінде', '1942 жылдың жазында', '1945 жылдың көктемінде', '1930 жылы'], a: 1 },
+            // 2. Аян кіммен келді
+            { type: 'single', q: 'Аян ауылға кіммен көшіп келді?', options: ['Әкесімен', 'Ағасымен', 'Әжесімен', 'Жалғыз өзі'], a: 2 },
+            // 3. Сиырдың түсі
+            { type: 'single', q: 'Аянның сиырының түсі қандай?', options: ['Қара', 'Ала', 'Қоңыр', 'Қызыл'], a: 2 },
+            // 4. Баяндаушы - UPDATED OPTION
+            { type: 'single', q: 'Әңгіме кімнің атынан баяндалады?', options: ['Аянның', 'Баяндаушы баланың (Мен)', 'Мұғалімнің', 'Есікбайдың'], a: 1 },
+            // 5. Әкесі (True/False)
+            { type: 'boolean', q: 'Ақиқат немесе Жалған: Аянның әкесі соғыстан аман қайтты.', a: 1 }, // 0: True, 1: False
+            // 6. Киімі
+            { type: 'single', q: 'Аян алғаш рет балаларға жолыққанда үстіне не киіп тұрған еді?', options: ['Жарғақ сары тон', 'Шолақ жең ақ жейде мен қара шалбар', 'Ескі пальто', 'Әскери киім'], a: 1 },
+            // 7. Matching Characters - UPDATED PAIR
+            { type: 'match', q: 'Кейіпкерлер мен олардың сипаттамасын сәйкестендір:', pairs: { 'Есікбай': 'Сотқар, төбелесқор', 'Қосым': 'Тырнауық, ақ көйлегі бар', 'Баяндаушы бала': 'Оқиғаны баяндаушы' } },
+            // 8. Төбелес себебі
+            { type: 'single', q: 'Есікбай мен Аян неге төбелесті?', options: ['Аян оның ойыншығын тартып алды', 'Есікбай Аянның бетіне сілекейін жақты', 'Аян оған тіл тигізді', 'Қосым үшін'], a: 1 },
+            // 9. Жеңіс
+            { type: 'single', q: 'Аян Есікбайды қалай жеңді?', options: ['Басынан ұрды', 'Аяғынан шалды', 'Қолын бұрап алды', 'Жеңген жоқ, жеңілді'], a: 2 },
+            // 10. Мұғалім
+            { type: 'single', q: 'Бірінші сыныпта сабақ берген, қолы қалтырайтын мұғалім кім?', options: ['Асылбек', 'Иманжанов', 'Тұржан', 'Бапай'], a: 1 },
+            // 11. Хат жазу (True/False)
+            { type: 'boolean', q: 'Ақиқат немесе Жалған: Балалар майданға хат жазуды Аяннан үйренді.', a: 0 },
+            // 12. Аяғын тайдыру
+            { type: 'single', q: 'Аян аяғын (тобығын) алғаш рет қалай тайдырып алды?', options: ['Шанадан құлап', 'Бұзауға мінгенде', 'Есікбаймен төбелескенде', 'Өгізден құлап'], a: 1 },
+            // 13. Ертегі тыңдау орны
+            { type: 'single', q: 'Қыста балалар қай жерге жиналып ертегі тыңдайтын болды?', options: ['Мектепте', 'Бапайдың үйінде', 'Ат қораның төбесінде', 'Жыраның ішінде'], a: 2 },
+            // 14. Шылым (Multi)
+            { type: 'multi', q: 'Балалар ертегі тыңдағанда "темекі" ретінде нені тартатын?', options: ['Кепкен жапырақ', 'Кепкен жылқы тезегі', 'Газет қиындысы', 'Шөп'], a: [1, 2] },
+            // 15. Өрт
+            { type: 'single', q: 'Ат қораның төбесіндегі өрт неден шықты?', options: ['Найзағай түсті', 'Балалардың бірі темекі тұқылын тастап жіберді', 'Шөп өздігінен жанды', 'Аян жақты'], a: 1 },
+            // 16. Тұржанның іс-әрекеті
+            { type: 'single', q: 'Өрт кезінде қорадан секірген Аянды кім сабады?', options: ['Бапай', 'Есікбай', 'Тұржан', 'Иманжанов'], a: 2 },
+            // 17. Тұржанның сипаты
+            { type: 'single', q: 'Тұржанның дене мүшесінде қандай кемістік бар еді?', options: ['Аяғы ақсақ', 'Сол қолы білегінен жоқ (шолақ)', 'Көзі көрмейді', 'Құлағы естімейді'], a: 1 },
+            // 18. Аяғын емдету (True/False)
+            { type: 'boolean', q: 'Ақиқат немесе Жалған: Аян Тұржаннан таяқ жеген соң, аяғын Асылбекке қайта салғызды.', a: 1 },
+            // 19. Реттеу
+            { type: 'order', q: 'Оқиғаларды реттеңіз:', items: ['Аянның ауылға келуі', 'Есікбаймен төбелес', 'Ат қорадағы өрт', 'Балалар үйіне кетуі'] },
+            // 20. Иіс
+            { type: 'single', q: 'Аянның ең жақсы көретін иісі қандай?', options: ['Жусан иісі', 'Бензин иісі', 'Қауын иісі', 'Жаңбыр иісі'], a: 0 },
+            // 21. Көшу (Text)
+            { type: 'text', q: 'Аянның әжесі қайтыс болғаннан кейін көшкен үйі кімнің үйі? (Есімі)', keywords: ['бапай', 'бапайдың'] },
+            // 22. Ертегі тақырыбы
+            { type: 'single', q: 'Аян қандай қорқынышты кейіпкер туралы ертегі айтты?', options: ['Жалмауыз кемпір', 'Жалғыз көзді дәу', 'Аждаһа', 'Мыстан'], a: 1 },
+            // 23. Шана (True/False)
+            { type: 'boolean', q: 'Ақиқат немесе Жалған: Аянның өз шанасы болған жоқ.', a: 0 },
+            // 24. Түс
+            { type: 'single', q: 'Аян түсінде ағасын көргенде, одан қандай иіс шығып тұрды деді?', options: ['Темекі иісі', 'Жусан иісі', 'Дәрі иісі', 'Нан иісі'], a: 1 },
+            // 25. Заттар (Matching)
+            { type: 'match', q: 'Заттарды иелерімен сәйкестендір:', pairs: { 'Жарғақ сары тон': 'Аян', 'Дойыр қамшы': 'Тұржан', 'Ақ жейде': 'Аян (алғаш келгенде)' } },
+            // 26. Көктемгі жұмыс
+            { type: 'single', q: 'Көктемде балалар қандай жұмыс істеді?', options: ['Шөп шапты', 'Жер жыртты (өгіз айдады)', 'Мақта терді', 'Құрылыс салды'], a: 1 },
+            // 27. Әйелдер әні
+            { type: 'single', q: 'Соқа айдаған әйелдер жұмыс үстінде не істейтін?', options: ['Көңілді ән айтатын', 'Мұңды ән айтып жылайтын', 'Ұрсатын', 'Үнсіз жүретін'], a: 1 },
+            // 28. Қара қағаз (True/False)
+            { type: 'boolean', q: 'Ақиқат немесе Жалған: Аянға "қара қағаз" келгенде ол сол жерде айқайлап жылады.', a: 1 },
+            // 29. Кету
+            { type: 'single', q: 'Аян ауылдан қайда кетті?', options: ['Қалаға оқуға', 'Балалар үйіне', 'Туыстарына', 'Майданға'], a: 1 },
+            // 30. Шығарып салу
+            { type: 'single', q: 'Аянды шығарып салғанда арбаның соңынан кім ұзақ жүгірді?', options: ['Садық', 'Есікбай', 'Қосым', 'Тұржан'], a: 1 },
+            // 31. Уәде (True/False)
+            { type: 'boolean', q: 'Ақиқат немесе Жалған: Бапай шал Аянға сиырын сатып, ақшасын беремін деп уәде етті.', a: 0 },
+            // 32. Соңы - UPDATED TEXT
+            { type: 'single', q: 'Повесть соңында автор (Баяндаушы бала) нені еске алады?', options: ['Мектепті', 'Жусан иісін және Аянды', 'Соғысты', 'Тұржанды'], a: 1 },
+            // 33. Сынықшы (Text)
+            { type: 'text', q: 'Аянның аяғын емдеген сынықшы шалдың аты кім?', keywords: ['асылбек'] },
+            // 34. Мінез
+            { type: 'single', q: 'Аянның мінезі қандай еді?', options: ['Тұйық, ашушаң', 'Ақ көңіл, қиялшыл', 'Қорқақ', 'Сараң'], a: 1 },
+            // 35. Ертегі кейіпкерлері (Multi)
+            { type: 'multi', q: 'Аянның ертегілерінде қандай кейіпкерлер кездесетін?', options: ['Роботтар', 'Жетім бала', 'Қотыр тай', 'Ұшақтар'], a: [1, 2] }
+        ];
+
+        let currentQIndex = 0;
+        let score = 0;
+        let userAnswers = {};
+
+        function renderQuestion() {
+            const q = questions[currentQIndex];
+            const container = document.getElementById('question-area');
+            document.getElementById('current-question-num').innerText = currentQIndex + 1;
+            
+            let html = `<h3 class="text-xl md:text-3xl font-cinema text-amber-100 mb-6 leading-relaxed">${currentQIndex + 1}. ${q.q}</h3>`;
+
+            if (q.type === 'single') {
+                html += `<div class="grid gap-3">`;
+                q.options.forEach((opt, idx) => {
+                    const isChecked = userAnswers[currentQIndex] === idx ? 'checked' : '';
+                    html += `
+                        <label class="flex items-center p-4 rounded border border-stone-600 bg-stone-800 hover:bg-stone-700 cursor-pointer transition">
+                            <input type="radio" name="q" value="${idx}" ${isChecked} class="w-5 h-5 text-amber-600 accent-amber-600 mr-4">
+                            <span class="text-stone-300 text-lg">${opt}</span>
+                        </label>`;
+                });
+                html += `</div>`;
+            } 
+            else if (q.type === 'boolean') {
+                const opts = ['Ақиқат (Шын)', 'Жалған (Өтірік)'];
+                html += `<div class="grid grid-cols-2 gap-4">`;
+                opts.forEach((opt, idx) => {
+                    const isChecked = userAnswers[currentQIndex] === idx ? 'checked' : '';
+                    html += `
+                        <label class="flex items-center justify-center p-6 rounded border border-stone-600 bg-stone-800 hover:bg-stone-700 cursor-pointer transition text-center">
+                            <input type="radio" name="q" value="${idx}" ${isChecked} class="w-5 h-5 text-amber-600 accent-amber-600 mr-4">
+                            <span class="text-stone-300 text-xl font-bold">${opt}</span>
+                        </label>`;
+                });
+                html += `</div>`;
+            }
+            else if (q.type === 'multi') {
+                html += `<div class="grid gap-3"><p class="text-stone-500 text-sm mb-2">(Бірнеше жауап таңдаңыз)</p>`;
+                q.options.forEach((opt, idx) => {
+                    const prev = userAnswers[currentQIndex] || [];
+                    const isChecked = prev.includes(idx) ? 'checked' : '';
+                    html += `
+                        <label class="flex items-center p-4 rounded border border-stone-600 bg-stone-800 hover:bg-stone-700 cursor-pointer transition">
+                            <input type="checkbox" value="${idx}" ${isChecked} class="w-5 h-5 text-amber-600 accent-amber-600 mr-4 multi-cb">
+                            <span class="text-stone-300 text-lg">${opt}</span>
+                        </label>`;
+                });
+                html += `</div>`;
+            }
+            else if (q.type === 'text') {
+                const val = userAnswers[currentQIndex] || '';
+                html += `
+                    <div class="mt-4">
+                        <input type="text" id="text-input" value="${val}" placeholder="Жауабыңыз..." class="w-full bg-stone-800 border border-stone-600 p-4 rounded text-amber-100 focus:outline-none focus:border-amber-500 font-cinema text-xl">
+                    </div>`;
+            }
+            else if (q.type === 'order') {
+                html += `<p class="text-stone-500 text-sm mb-4">(Ретін өзгерту үшін батырмаларды басыңыз)</p><div id="order-list" class="space-y-2">`;
+                let list = userAnswers[currentQIndex] ? userAnswers[currentQIndex] : [...q.items];
+                
+                list.forEach((item, idx) => {
+                    html += `
+                        <div class="flex items-center justify-between p-3 bg-stone-800 border border-stone-600 rounded">
+                            <span class="text-stone-300">${item}</span>
+                            <div class="flex flex-col space-y-1">
+                                <button onclick="reorder(${idx}, -1)" class="text-amber-500 hover:text-white px-2"><i class="fas fa-chevron-up"></i></button>
+                                <button onclick="reorder(${idx}, 1)" class="text-amber-500 hover:text-white px-2"><i class="fas fa-chevron-down"></i></button>
+                            </div>
+                        </div>`;
+                });
+                html += `</div>`;
+            }
+            else if (q.type === 'match') {
+                html += `<div class="grid grid-cols-2 gap-4 text-sm md:text-base">`;
+                const keys = Object.keys(q.pairs);
+                const values = Object.values(q.pairs);
+                
+                keys.forEach((k, idx) => {
+                    const savedVal = userAnswers[currentQIndex] && userAnswers[currentQIndex][idx] ? userAnswers[currentQIndex][idx] : '';
+                    html += `
+                        <div class="flex items-center justify-center p-3 bg-stone-700 rounded text-center border border-stone-600">${k}</div>
+                        <select id="match-${idx}" class="bg-stone-800 border border-stone-600 rounded p-2 text-stone-300 outline-none focus:border-amber-500">
+                            <option value="">Таңдаңыз...</option>
+                            ${values.map(v => `<option value="${v}" ${savedVal === v ? 'selected' : ''}>${v}</option>`).join('')}
+                        </select>
+                    `;
+                });
+                html += `</div>`;
+            }
+
+            container.innerHTML = html;
+            updateButtons();
+        }
+
+        function updateButtons() {
+            const prev = document.getElementById('prev-btn');
+            const next = document.getElementById('next-btn');
+            const finish = document.getElementById('finish-btn');
+            
+            prev.disabled = currentQIndex === 0;
+            prev.style.opacity = currentQIndex === 0 ? '0.3' : '1';
+
+            if (currentQIndex === questions.length - 1) {
+                next.classList.add('hidden');
+                finish.classList.remove('hidden');
+            } else {
+                next.classList.remove('hidden');
+                finish.classList.add('hidden');
+            }
+        }
+
+        function saveCurrentAnswer() {
+            const q = questions[currentQIndex];
+            
+            if (q.type === 'single' || q.type === 'boolean') {
+                const el = document.querySelector('input[name="q"]:checked');
+                if(el) userAnswers[currentQIndex] = parseInt(el.value);
+            }
+            else if (q.type === 'multi') {
+                const els = document.querySelectorAll('.multi-cb:checked');
+                userAnswers[currentQIndex] = Array.from(els).map(e => parseInt(e.value));
+            }
+            else if (q.type === 'text') {
+                const el = document.getElementById('text-input');
+                if(el) userAnswers[currentQIndex] = el.value.trim().toLowerCase();
+            }
+            else if (q.type === 'match') {
+                const keys = Object.keys(q.pairs);
+                const answers = [];
+                keys.forEach((_, i) => {
+                    const el = document.getElementById(`match-${i}`);
+                    answers.push(el.value);
+                });
+                userAnswers[currentQIndex] = answers;
+            }
+             if (q.type === 'order' && !userAnswers[currentQIndex]) {
+                 userAnswers[currentQIndex] = [...q.items];
+             }
+        }
+
+        function reorder(idx, dir) {
+            playClickSound();
+            const q = questions[currentQIndex];
+            let list = userAnswers[currentQIndex] ? userAnswers[currentQIndex] : [...q.items];
+            
+            if (dir === -1 && idx > 0) {
+                [list[idx], list[idx-1]] = [list[idx-1], list[idx]];
+            } else if (dir === 1 && idx < list.length - 1) {
+                [list[idx], list[idx+1]] = [list[idx+1], list[idx]];
+            }
+            userAnswers[currentQIndex] = list;
+            renderQuestion();
+        }
+
+        function nextQuestion() {
+            playSlideSound();
+            saveCurrentAnswer();
+            if (currentQIndex < questions.length - 1) {
+                currentQIndex++;
+                renderQuestion();
+            }
+        }
+
+        function prevQuestion() {
+            playSlideSound();
+            saveCurrentAnswer();
+            if (currentQIndex > 0) {
+                currentQIndex--;
+                renderQuestion();
+            }
+        }
+
+        function finishTest() {
+            saveCurrentAnswer();
+            score = 0;
+
+            questions.forEach((q, idx) => {
+                const ans = userAnswers[idx];
+                if (ans === undefined || ans === null) return;
+
+                if (q.type === 'single' || q.type === 'boolean') {
+                    if (ans === q.a) score++;
+                }
+                else if (q.type === 'multi') {
+                    if (JSON.stringify(ans.sort()) === JSON.stringify(q.a.sort())) score++;
+                }
+                else if (q.type === 'text') {
+                    if (q.keywords.some(k => ans.includes(k))) score++;
+                }
+                else if (q.type === 'match') {
+                    const keys = Object.keys(q.pairs);
+                    const correctVals = Object.values(q.pairs);
+                    let matchCount = 0;
+                    ans.forEach((val, i) => {
+                        if (val === correctVals[i]) matchCount++;
+                    });
+                    if (matchCount === keys.length) score++;
+                }
+                else if (q.type === 'order') {
+                    if (JSON.stringify(ans) === JSON.stringify(q.items)) score++;
+                }
+            });
+
+            document.getElementById('quiz-ui').classList.add('hidden');
+            document.getElementById('results-ui').classList.remove('hidden');
+            
+            let currentScore = 0;
+            const scoreEl = document.getElementById('final-score');
+            const interval = setInterval(() => {
+                scoreEl.innerText = currentScore;
+                if(currentScore >= score) clearInterval(interval);
+                currentScore++;
+            }, 30);
+
+            const feed = document.getElementById('feedback-text');
+            if (score === 35) feed.innerText = "Керемет! Сіз повесті сөзбе-сөз жатқа білесіз!";
+            else if (score >= 28) feed.innerText = "Өте жақсы нәтиже! Режиссерлік шеберлігіңіз жоғары.";
+            else if (score >= 18) feed.innerText = "Жақсы, бірақ кейбір детальдарды ұмытыпсыз.";
+            else feed.innerText = "Мәтінді қайта оқып шығу керек.";
+            
+            playTone(400, 'sine', 0.2);
+            setTimeout(() => playTone(600, 'triangle', 0.4), 200);
+        }
+
+        function restartTest() {
+            playClickSound();
+            currentQIndex = 0;
+            score = 0;
+            userAnswers = {};
+            document.getElementById('results-ui').classList.add('hidden');
+            document.getElementById('quiz-ui').classList.remove('hidden');
+            renderQuestion();
+            document.getElementById('score-display').innerText = 0;
+        }
+
+        // Init
+        renderQuestion();
+    </script>
+</body>
+</html>
